@@ -1,0 +1,2 @@
+web: bin/rails server -p 3000
+inference: ./.venv/bin/python ./ml/server.py

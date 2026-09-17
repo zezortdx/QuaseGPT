@@ -1,0 +1,36 @@
+#!/usr/bin/env sh
+# Local developer workflow: Rails (chat UI) + QuaseGPT inference runtime.
+# No foreman dependency: plain sh starts both and tears them down together.
+#
+# Usage:  bin/dev
+# Then:   Rails  http://localhost:3000
+#         Runtime http://127.0.0.1:8000  (QUASEGPT_INFERENCE_URL)
+
+set -eu
+ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)"
+cd "$ROOT"
+
+INFERENCE_URL="${QUASEGPT_INFERENCE_URL:-http://127.0.0.1:8000}"
+INFERENCE_PORT="$(printf '%s' "$INFERENCE_URL" | sed -E 's#.*:([0-9]+)/?.*#\1#')"
+
+if [ ! -x "$ROOT/.venv/bin/python" ]; then
+  echo "missing .venv — run:  python3 -m venv .venv && .venv/bin/pip install -r ml/requirements.txt" >&2
+  exit 1
+fi
+
+# Keep the DB migrated so a fresh clone boots with zero extra steps.
+bin/rails db:prepare >/dev/null 2>&1 || bin/rails db:prepare
+
+PORT="$INFERENCE_PORT" "$ROOT/.venv/bin/python" "$ROOT/ml/server.py" &
+INFERENCE_PID=$!
+
+cleanup() {
+  kill "$INFERENCE_PID" 2>/dev/null || true
+  wait "$INFERENCE_PID" 2>/dev/null || true
+}
+trap cleanup INT TERM EXIT
+
+# Give the runtime a moment so the health badge is green on first load.
+sleep 2
+
+QUASEGPT_INFERENCE_URL="$INFERENCE_URL" bin/rails server

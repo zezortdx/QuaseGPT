@@ -1,0 +1,14 @@
+<% content_for(:title, "QuaseGPT") %>
+
+<div class="chat chat-welcome">
+  <div class="welcome">
+    <h1>QuaseGPT</h1>
+    <p class="subtitle">Almost intelligent.</p>
+    <p class="hint">
+      A small decoder-only Transformer running locally via PyTorch.
+      No accounts, no external APIs — start typing below.
+    </p>
+  </div>
+</div>
+
+<%= render "conversations/composer", conversation: nil %>

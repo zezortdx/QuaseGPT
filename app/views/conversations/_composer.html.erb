@@ -1,0 +1,23 @@
+<%# Shared sticky composer. On the landing page it creates the conversation;
+    inside a conversation it appends a turn. %>
+<% if conversation&.persisted? %>
+  <%= form_with url: conversation_messages_path(conversation), method: :post,
+                class: "composer", data: { turbo: true } do |f| %>
+    <%= f.text_area :content, name: "content", rows: 2, autofocus: true,
+                    placeholder: "Message QuaseGPT…", required: true, maxlength: 8000,
+                    data: { controller: "composer", action: "keydown->composer#submitOnEnter" } %>
+    <%= f.submit "Send", class: "send-btn" %>
+  <% end %>
+  <noscript>
+    <%= form_with url: conversation_messages_path(conversation, sync: 1), method: :post, class: "composer" do %>
+      <input type="text" name="content" placeholder="Message QuaseGPT…" required maxlength="8000">
+      <button type="submit" class="send-btn">Send</button>
+    <% end %>
+  </noscript>
+<% else %>
+  <%= form_with url: conversations_path, method: :post, class: "composer", data: { turbo: false } do %>
+    <textarea name="content" rows="2" autofocus required maxlength="8000"
+              placeholder="Message QuaseGPT…"></textarea>
+    <%= submit_tag "Send", class: "send-btn" %>
+  <% end %>
+<% end %>

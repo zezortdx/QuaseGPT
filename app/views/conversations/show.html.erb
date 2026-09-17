@@ -1,0 +1,9 @@
+<% content_for(:title, @conversation.title.presence || "QuaseGPT") %>
+
+<div class="chat" id="chat">
+  <% @messages.each do |message| %>
+    <%= render "messages/message", message: message, streaming: message.id == @streaming_id %>
+  <% end %>
+</div>
+
+<%= render "conversations/composer", conversation: @conversation %>

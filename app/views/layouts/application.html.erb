@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title><%= content_for(:title) || "QuaseGPT" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="icon" href="/icon.png" type="image/png">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body data-controller="sidebar">
+    <div class="shell">
+      <div class="scrim" data-action="click->sidebar#close" data-sidebar-target="scrim" hidden></div>
+
+      <aside class="sidebar" data-sidebar-target="panel">
+        <div class="brand">
+          <span class="brand-mark">Q</span>
+          <span class="brand-text">QuaseGPT <small>Almost intelligent.</small></span>
+        </div>
+
+        <%= link_to "+ New chat", root_path, class: "new-chat" %>
+
+        <nav class="conversations" aria-label="Conversations">
+          <% (@conversations || []).each do |conv| %>
+            <%= link_to conversation_path(conv),
+                        class: "conv-link#{' active' if @conversation&.id == conv.id}" do %>
+              <span class="conv-title"><%= conv.title.presence || "New chat" %></span>
+            <% end %>
+          <% end %>
+          <% if (@conversations || []).empty? %>
+            <p class="conv-empty">No conversations yet.</p>
+          <% end %>
+        </nav>
+
+        <div class="runtime" title="Local QuaseGPT inference runtime">
+          <% if runtime_status[:loaded] %>
+            <span class="dot dot-ok" aria-hidden="true"></span>
+            <span>local model · <%= runtime_status[:device] %></span>
+          <% else %>
+            <span class="dot dot-bad" aria-hidden="true"></span>
+            <span>model offline — run <code>bin/dev</code></span>
+          <% end %>
+        </div>
+      </aside>
+
+      <div class="main">
+        <header class="topbar">
+          <button class="menu-btn" data-action="click->sidebar#toggle" aria-label="Toggle sidebar">☰</button>
+          <span class="topbar-title">QuaseGPT</span>
+          <% if @conversation&.persisted? %>
+            <%= button_to "Delete", conversation_path(@conversation), method: :delete,
+                          class: "link-btn", form: { data: { turbo_confirm: "Delete this conversation?" } } %>
+          <% end %>
+        </header>
+
+        <% if notice %><p class="flash flash-notice"><%= notice %></p><% end %>
+        <% if alert %><p class="flash flash-alert"><%= alert %></p><% end %>
+
+        <%= yield %>
+      </div>
+    </div>
+  </body>
+</html>

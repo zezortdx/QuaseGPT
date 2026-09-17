@@ -1,0 +1,57 @@
+# Ruby / Rails
+/.bundle/
+.bundle/
+vendor/bundle/
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/storage/*
+!/storage/.keep
+/coverage/
+coverage/
+.byebug_history
+config/master.key
+config/credentials/*.key
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# QuaseGPT model weights + datasets (large, machine-generated)
+model/checkpoint.pt
+model/*.pt
+model/*.pth
+model/*.ckpt
+model/*.safetensors
+data/
+datasets/
+checkpoints/
+*.pt
+*.zip
+!ml/tests/**/*.pt
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Node (if ever added)
+node_modules/
+
+# Kamal secrets
+.kamal/secrets

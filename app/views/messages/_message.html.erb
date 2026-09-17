@@ -1,0 +1,22 @@
+<%# Minimalist message row. The assistant row with streaming=true opens an
+    SSE connection (see stream_controller.js) and fills in live. %>
+<div class="msg msg-<%= message.role %>" id="message-<%= message.id %>">
+  <div class="msg-role"><%= message.role == "user" ? "You" : "QuaseGPT" %></div>
+  <div class="msg-body">
+    <% if message.assistant? && streaming %>
+      <span data-controller="stream"
+            data-stream-url-value="<%= stream_conversation_path(message.conversation, assistant_id: message.id) %>"
+            data-stream-target="output"><span class="typing">Thinking…</span></span>
+      <noscript><p class="msg-failed">Enable JavaScript for live streaming, or retry with the no-JS form.</p></noscript>
+    <% elsif message.content.present? %>
+      <%= simple_format(h(message.content)) %>
+    <% elsif message.assistant? && message.status == "streaming" %>
+      <span class="typing">Thinking…</span>
+    <% end %>
+    <% if message.assistant? && message.status == "failed" %>
+      <p class="msg-failed"><%= h(message.content.presence || "Generation failed.") %></p>
+      <%= button_to "Retry", conversation_messages_path(message.conversation, retry_assistant_id: message.id, sync: 1),
+                    method: :post, class: "link-btn" %>
+    <% end %>
+  </div>
+</div>
