@@ -11,7 +11,7 @@ gem "puma", ">= 5.0"
 # json 3.x removed the positional-options form of JSON.parse that
 # ActiveSupport 8.1 uses for session cookies; stay on 2.x until Rails
 # supports the keyword form.
-gem "json", "< 3"
+gem "json", "< 4"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
 gem "importmap-rails"
 # Hotwire's SPA-like page accelerator [https://turbo.hotwired.dev]
