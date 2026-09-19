@@ -1,0 +1,66 @@
+#!/usr/bin/env sh
+# QuaseGPT one-command launcher.
+#
+# Daily usage:
+#   ./quasegpt
+#
+# Checks the local setup, warns about a missing checkpoint or a busy
+# port 3000, opens the chat UI, then runs the existing bin/dev workflow
+# (Rails on :3000 + local PyTorch runtime on :8000).
+# Ctrl+C stops everything. Set QUASEGPT_NO_BROWSER=1 to skip auto-open.
+set -eu
+
+ROOT="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
+cd "$ROOT"
+
+fail() { echo "quasegpt: $1" >&2; exit 1; }
+
+# --- preflight -------------------------------------------------------------
+[ -x "$ROOT/.venv/bin/python" ] \
+  || fail "missing .venv — run: python3 -m venv .venv && .venv/bin/pip install -r ml/requirements.txt"
+bundle check >/dev/null 2>&1 \
+  || fail "Ruby dependencies missing — run: bundle install"
+[ -f "$ROOT/model/config.json" ] \
+  || fail "missing model/config.json — it should be committed in the repo"
+[ -f "$ROOT/model/tokenizer.json" ] \
+  || fail "missing model/tokenizer.json — it should be committed in the repo"
+[ -f "$ROOT/model/checkpoint.pt" ] \
+  || fail "missing model/checkpoint.pt — the trained weights are NOT in git. Install them per model/README.md, then run ./quasegpt again."
+
+# --- port 3000 ---------------------------------------------------------------
+if command -v lsof >/dev/null 2>&1; then
+  OWNER="$(lsof -iTCP:3000 -sTCP:LISTEN -n -P 2>/dev/null | awk 'NR==2 {print $1" (PID "$2")"}')"
+  if [ -n "$OWNER" ]; then
+    echo "quasegpt: note: port 3000 is already in use by: $OWNER"
+    echo "quasegpt: if the UI does not load, stop that process or run: bin/rails server -p 3001"
+  fi
+fi
+
+# --- stale Rails pidfile ---------------------------------------------------------
+# A previous run killed without cleanup leaves tmp/pids/server.pid behind
+# and Rails refuses to boot. Remove it only when no server is running.
+PIDFILE="$ROOT/tmp/pids/server.pid"
+if [ -f "$PIDFILE" ]; then
+  OLDPID="$(cat "$PIDFILE" 2>/dev/null | tr -d '[:space:]')"
+  if [ -n "$OLDPID" ] && kill -0 "$OLDPID" 2>/dev/null; then
+    fail "a Rails server is already running (pid $OLDPID) — stop it first"
+  else
+    rm -f "$PIDFILE"
+    echo "quasegpt: removed stale tmp/pids/server.pid (pid ${OLDPID:-unknown} not running)"
+  fi
+fi
+
+# --- database ----------------------------------------------------------------
+bin/rails db:prepare >/dev/null 2>&1 || bin/rails db:prepare
+
+# --- browser -----------------------------------------------------------------
+if [ -z "${QUASEGPT_NO_BROWSER:-}" ]; then
+  if command -v open >/dev/null 2>&1; then
+    ( sleep 4; open http://localhost:3000 ) >/dev/null 2>&1 &
+  elif command -v xdg-open >/dev/null 2>&1; then
+    ( sleep 4; xdg-open http://localhost:3000 ) >/dev/null 2>&1 &
+  fi
+fi
+
+echo "quasegpt: starting (Ctrl+C stops everything)…"
+exec "$ROOT/bin/dev"

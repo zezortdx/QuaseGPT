@@ -16,17 +16,39 @@ Browser → Ruby on Rails (chat UI, persistence)
 
 ## Quickstart (local, no Colab)
 
+First-time setup:
+
 ```sh
+git clone https://github.com/zezortdx/QuaseGPT.git
+cd QuaseGPT
+python3 -m venv .venv
+.venv/bin/pip install -r ml/requirements.txt
 bundle install
-pip install -r ml/requirements.txt        # or: python3 -m venv .venv && .venv/bin/pip install -r ml/requirements.txt
 bin/rails db:prepare
-bin/dev
 ```
 
-Then open:
+Then install the trained weights at `model/checkpoint.pt`
+(`config.json` + `tokenizer.json` are already in the repo) and verify:
 
-- Chat UI: http://localhost:3000
-- Runtime health: http://127.0.0.1:8000/health (`QUASEGPT_INFERENCE_URL` overrides the Rails side)
+```sh
+.venv/bin/python scripts/verify_model.py   # success = VERIFY OK
+```
+
+Daily usage:
+
+```sh
+./quasegpt
+```
+
+This checks your setup, starts Rails + the local runtime, and opens
+the chat UI at http://localhost:3000 (health:
+http://127.0.0.1:8000/health). Ctrl+C stops everything.
+
+On macOS you can also double-click `QuaseGPT.command`.
+
+Developers who want the lower-level pieces can run `bin/dev` directly
+(same two processes, no preflight checks or auto-open); set
+`QUASEGPT_NO_BROWSER=1` to skip the browser auto-open.
 
 Try the definitive test with Colab closed: send **“Once upon a time”** —
 the reply must come from the local checkpoint.
