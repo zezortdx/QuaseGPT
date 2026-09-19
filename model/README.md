@@ -12,15 +12,15 @@ model/
 └── README.md
 ```
 
-## Committed placeholder vs real export
+## Committed config/tokenizer vs weights
 
-The `config.json` / `tokenizer.json` committed here form a **consistent
-placeholder pair** (2000-token BPE trained on a tiny built-in English word
-list). They exist so the app boots, tests run, and the full pipeline is
-exercisable without weights. They are NOT the trained model: there is no
-`checkpoint.pt` until you export one. A real Colab export **replaces both
-files** (vocab size will change, typically to 8000) — that is expected and
-supported; the loader validates the pair on every startup.
+The `config.json` / `tokenizer.json` committed here describe the trained
+QuaseGPT 39M (2000-token BPE trained on the training corpus; 12 layers /
+8 heads / d512, context 256, ≈38.98M params at step 19999). They ship so
+the app boots and tests run, but they are NOT the trained model on their
+own: there is no `checkpoint.pt` in Git. A fresh Colab export **replaces
+all three files as a set** — checkpoint + config + tokenizer always
+belong together (see the tokenizer warning in `training/colab/README.md`).
 
 ## Where to put the checkpoint
 

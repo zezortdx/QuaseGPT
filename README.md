@@ -43,13 +43,19 @@ the reply must come from the local checkpoint.
 
 ## Model status
 
-`model/config.json` (vocab 2000 · context 256 · 6 layers / 6 heads / d384,
-tied weights, ≈11.5M params) plus the matching `model/tokenizer.json` are
-committed so the app boots and tests run. **There is no `checkpoint.pt`
-yet** — until you export one, the runtime loads with random weights and says
+QuaseGPT 39M — trained from scratch as a **base language model** on
+TinyStories-style text (**not instruction-tuned**): vocab 2000 ·
+context 256 · 12 layers / 8 heads / d512, tied weights, ≈38.98M params,
+trained to step 19999.
+
+`model/config.json` plus the matching `model/tokenizer.json` are committed
+and describe exactly this trained model, so the app boots and tests run.
+The trained weights themselves (`model/checkpoint.pt`) are intentionally
+NOT in Git — without them the runtime loads with random weights and says
 so honestly (`Checkpoint: MISSING (random weights!)`, health `error`).
 
-To install the real weights (the only remaining artifact step):
+To install the real weights locally (the checkpoint is distributed
+separately, not via GitHub):
 
 1. Follow `training/colab/README.md` → download `quasegpt-export.zip`.
 2. `unzip quasegpt-export.zip -d quasegpt-export`

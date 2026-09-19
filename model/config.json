@@ -2,9 +2,9 @@
   "model_type": "quasegpt",
   "vocab_size": 2000,
   "block_size": 256,
-  "n_embd": 384,
-  "n_head": 6,
-  "n_layer": 6,
+  "n_embd": 512,
+  "n_head": 8,
+  "n_layer": 12,
   "dropout": 0.1,
   "bias": true,
   "tie_weights": true
