@@ -118,7 +118,16 @@ Tune `configs/training.json` (`max_steps`, `batch_size`,
 ## 5. Recovery (resume after preemption)
 
 If Colab disconnects, don't restart from scratch — resume from the last
-saved checkpoint (keep a copy in Drive so it survives the VM reset):
+saved checkpoint. A Colab VM reset wipes local files, so during long runs
+periodically copy the checkpoint somewhere persistent (Drive mount or a
+manual download):
+
+```python
+# from a Drive-mounted notebook, e.g. after every few thousand steps:
+!cp model/checkpoint.pt /content/gdrive/MyDrive/QuaseGPT-39M/checkpoint.pt
+```
+
+Then resume with the same config (or a copy with a larger `max_steps`):
 
 ```python
 !python ml/train.py \

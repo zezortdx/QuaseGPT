@@ -47,6 +47,12 @@ The loader refuses to start on shape mismatch instead of silently misbehaving.
 tokens `<pad> <unk> <bos> <eos>`). No extra vocab/merge sidecar files are
 needed. Same file in Colab and locally => same text maps to same IDs.
 
+> **Warning:** a checkpoint only works with the tokenizer it was trained
+> with. Using a different `tokenizer.json` (different vocab size or
+> merges) either fails loudly on shape mismatch or — worse — silently
+> maps the same IDs to different words. Always keep the exported triple
+> (`checkpoint.pt` + `config.json` + `tokenizer.json`) together.
+
 ## Compatibility check
 
 `python scripts/verify_model.py` loads config + tokenizer + checkpoint on CPU,

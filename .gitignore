@@ -30,6 +30,7 @@ model/*.pt
 model/*.pth
 model/*.ckpt
 model/*.safetensors
+model/backup*/
 data/
 datasets/
 checkpoints/

@@ -1,4 +1,8 @@
-# QuaseGPT — Almost intelligent.
+# QuaseGPT
+
+A tiny GPT trained from scratch.
+
+Almost intelligent.
 
 Our own decoder-only Transformer, trained from scratch in PyTorch, served
 locally with a Ruby on Rails chat UI. **No external LLM APIs.**
@@ -54,8 +58,8 @@ The trained weights themselves (`model/checkpoint.pt`) are intentionally
 NOT in Git — without them the runtime loads with random weights and says
 so honestly (`Checkpoint: MISSING (random weights!)`, health `error`).
 
-To install the real weights locally (the checkpoint is distributed
-separately, not via GitHub):
+To install the real weights locally (the checkpoint lives outside the git
+tree — e.g. a future GitHub Release asset — never commit it):
 
 1. Follow `training/colab/README.md` → download `quasegpt-export.zip`.
 2. `unzip quasegpt-export.zip -d quasegpt-export`
@@ -67,6 +71,62 @@ QuaseGPT is a **base language model, not instruction-tuned**: it continues
 text plausibly rather than following instructions like ChatGPT. Chat behavior
 depends on training; the template lives in one replaceable place
 (`ml/quasegpt/prompt.py` + `lib/quase_gpt_prompt.rb`).
+
+## Running
+
+`bin/dev` starts both processes: Rails on `:3000`, inference runtime on
+`:8000`. Without a checkpoint the app still boots — the runtime reports
+`MISSING (random weights!)` and the UI shows a failure note instead of
+fake text.
+
+```sh
+python ml/chat.py                 # CLI inference: "Once upon a time", empty line quits
+python scripts/smoke_test.py      # live server health + generate check
+```
+
+Configuration (all optional):
+
+| Variable | Default | Effect |
+|---|---|---|
+| `QUASEGPT_INFERENCE_URL` | `http://127.0.0.1:8000` | where Rails finds the runtime (`bin/dev` derives the runtime port from it) |
+| `QUASEGPT_MODEL_DIR` | `./model` | where the runtime loads `config.json` / `tokenizer.json` / `checkpoint.pt` |
+| `QUASEGPT_DEVICE` | `auto` | `auto` picks CUDA → MPS → CPU; force with `cuda`, `mps`, or `cpu` |
+| `QUASEGPT_BLOCK_SIZE` | `256` | context budget mirror on the Rails side |
+
+If port 3000 is taken by another app, run Rails on another port:
+`bin/rails server -p 3001` (start the runtime separately with
+`PORT=8000 .venv/bin/python ml/server.py` instead of `bin/dev`).
+
+## Training
+
+Train your own weights (GPU recommended; CPU/MPS work but are slow):
+
+```sh
+python ml/prepare_data.py --input data/corpus.txt --out-dir data \
+    --tokenizer model/tokenizer.json --train-tokenizer --vocab-size 2000
+python ml/train.py --config configs/training.json
+```
+
+Resume after an interruption — continues from checkpoint step + 1 toward
+`max_steps` (final target, not an additional count):
+
+```sh
+python ml/train.py --config configs/training.json --resume model/checkpoint.pt
+```
+
+Full GPU workflow (dataset, smoke test, Drive persistence, export):
+`training/colab/README.md`.
+
+## Limitations
+
+- Base model: great at continuing TinyStories-style text, bad at
+  following instructions. That's the training, not a bug.
+- Small: 39M params, 256-token context. Don't expect essays or facts.
+- No safety tuning. Don't deploy the raw model to strangers.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ## Tests
 
