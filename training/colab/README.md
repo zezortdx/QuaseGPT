@@ -6,8 +6,9 @@ checkpoint — the export step below only packages files, never re-saves
 the model from notebook variables.
 
 Full flow: clone → install → verify GPU → prepare dataset → optional
-smoke test → full training → confirm `model/checkpoint.pt` → package
-three files → download `quasegpt-export.zip` → install locally →
+smoke test → full training (or `--resume` after preemption) → confirm
+`model/checkpoint.pt` → package three files →
+download `quasegpt-export.zip` → install locally →
 `python scripts/verify_model.py` → restart `bin/dev`.
 
 ## 1. Setup cell
@@ -114,7 +115,28 @@ What `ml/train.py` actually does (defaults from `configs/training.json`:
 Tune `configs/training.json` (`max_steps`, `batch_size`,
 `learning_rate`) as needed.
 
-## 5. Confirm + export cell (the important one)
+## 5. Recovery (resume after preemption)
+
+If Colab disconnects, don't restart from scratch — resume from the last
+saved checkpoint (keep a copy in Drive so it survives the VM reset):
+
+```python
+!python ml/train.py \
+  --config /content/quasegpt-39m.json \
+  --resume /content/gdrive/MyDrive/QuaseGPT-39M/checkpoint.pt
+```
+
+Semantics: the checkpoint's model + optimizer state are restored
+(strictly validated against the config — an incompatible checkpoint is a
+clear error, never a silent mismatch), training continues from
+checkpoint step + 1 (e.g. a checkpoint saved at step 7500 resumes at
+step 7501), and `max_steps` stays the FINAL target step (with
+`max_steps=20000` it runs 7501..19999, not a new 20000-step run). The LR
+schedule follows the real global step, and checkpoint saves continue
+normally. Startup prints `resuming checkpoint: ...` and
+`resuming from step: ...`.
+
+## 6. Confirm + export cell (the important one)
 
 Do NOT re-save the model from notebook variables (`model.state_dict()`,
 `optimizer.state_dict()`, `step`, `config` do not exist after
@@ -157,7 +179,7 @@ files.download("quasegpt-export.zip")
 
 Or run `python scripts/export_from_colab.py` to print these cells.
 
-## 6. Download + install locally
+## 7. Download + install locally
 
 1. Download `quasegpt-export.zip` (the `files.download` call above).
 2. `unzip quasegpt-export.zip -d quasegpt-export`
